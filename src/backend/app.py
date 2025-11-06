@@ -1,6 +1,5 @@
 from flask import Flask, request, jsonify
-import os
-import requests
+import os, requests
 
 app = Flask(__name__)
 
@@ -10,13 +9,21 @@ def home():
 
 @app.route("/weather")
 def get_weather():
-    city = request.args.get("city", "London")
+    city = request.args.get("city")
+    lat = request.args.get("lat")
+    lon = request.args.get("lon")
     api_key = os.environ.get("OPENWEATHER_API_KEY")
 
     if not api_key:
-        return jsonify({"error": "API key not set"}), 500
+        return jsonify({"error": "API key not configured"}), 500
 
-    url = f"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={api_key}&units=metric"
+    if city:
+        url = f"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={api_key}&units=metric"
+    elif lat and lon:
+        url = f"https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={api_key}&units=metric"
+    else:
+        return jsonify({"error": "Please provide city or coordinates"}), 400
+
     response = requests.get(url)
     return jsonify(response.json())
 
